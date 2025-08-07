@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-gray-700 font-medium px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+  
+  .input-field {
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+  }
+  
+  .section-title {
+    @apply text-2xl font-bold text-gray-900 mb-6;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .resume-container {
+    @apply bg-white shadow-sm;
+    min-height: 11in;
+    width: 8.5in;
+    margin: 0 auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+  }
+
+  /* PDF-specific styles */
+  .resume-pdf-container {
+    background: white;
+    width: 8.5in;
+    min-height: 11in;
+    margin: 0 auto;
+    padding: 0.5in;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #000;
+  }
+
+  .resume-pdf-container * {
+    box-sizing: border-box;
+  }
+
+  .resume-pdf-container h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #000;
+  }
+
+  .resume-pdf-container h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    margin-top: 16px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 2px;
+    color: #000;
+  }
+
+  .resume-pdf-container h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #000;
+  }
+
+  .resume-pdf-container p {
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+
+  .resume-pdf-container ul {
+    margin: 4px 0;
+    padding-left: 16px;
+  }
+
+  .resume-pdf-container li {
+    margin-bottom: 2px;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Print styles for PDF generation */
+@media print {
+  body {
+    @apply bg-white;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .resume-container {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
