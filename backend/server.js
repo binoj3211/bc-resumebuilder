@@ -6,6 +6,13 @@ const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
 const fs = require('fs').promises;
+const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
+require('dotenv').config();
+
+// Import routes
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,6 +20,7 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(helmet());
 app.use(compression());
+app.use(cookieParser());
 app.use(cors({
   origin: [
     'http://localhost:5173', // Main Vite dev server port
@@ -20,13 +28,19 @@ app.use(cors({
     'http://localhost:5175', 
     'http://localhost:5176', 
     'http://localhost:5177', 
-    'http://localhost:3000'
+    'http://localhost:3000',
+    process.env.FRONTEND_URL
   ], 
-  methods: ['POST', 'GET', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Accept'],
+  methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
+
+// Database connection
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ats-resume-builder')
+.then(() => console.log('📦 Connected to MongoDB'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
@@ -52,6 +66,10 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Authentication routes
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
 
 // PDF text extraction endpoint
 app.post('/api/extract-pdf-text', upload.single('resume'), async (req, res) => {
@@ -1098,9 +1116,10 @@ app.use((error, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 ATS Resume Backend Server started');
   console.log(`📡 Server running on http://localhost:${PORT}`);
+  console.log(`🌐 Also accessible via http://0.0.0.0:${PORT}`);
   console.log('🔍 Health check: http://localhost:' + PORT + '/health');
   console.log('📄 PDF extraction: POST http://localhost:' + PORT + '/api/extract-pdf-text');
 });

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Connection Test</title>
+</head>
+<body>
+    <h1>Testing Backend Connection</h1>
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        // Test health endpoint
+        results.innerHTML += '<p>Testing health endpoint...</p>';
+        
+        fetch('http://localhost:3001/health')
+            .then(response => {
+                results.innerHTML += `<p style="color: green;">✅ Health check: ${response.status}</p>`;
+                return response.json();
+            })
+            .then(data => {
+                results.innerHTML += `<p>Health response: ${JSON.stringify(data)}</p>`;
+                
+                // Test auth registration
+                results.innerHTML += '<p>Testing registration endpoint...</p>';
+                
+                return fetch('http://localhost:3001/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        firstName: 'Test',
+                        lastName: 'User',
+                        email: 'test@example.com',
+                        password: 'password123'
+                    })
+                });
+            })
+            .then(response => {
+                results.innerHTML += `<p style="color: green;">✅ Registration endpoint: ${response.status}</p>`;
+                return response.json();
+            })
+            .then(data => {
+                results.innerHTML += `<p>Registration response: ${JSON.stringify(data)}</p>`;
+            })
+            .catch(error => {
+                results.innerHTML += `<p style="color: red;">❌ Error: ${error.message}</p>`;
+                console.error('Full error:', error);
+            });
+    </script>
+</body>
+</html>

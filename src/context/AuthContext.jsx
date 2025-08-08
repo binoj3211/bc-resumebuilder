@@ -4,10 +4,26 @@ import axios from 'axios'
 
 const AuthContext = createContext()
 
-// API Base URL - Update this to your backend server URL
+// API Base URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
 
-// Configure axios defaults
+// Configure Google OAuth
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '937896536559-j8m59fkh30thg89dld8r6b9mjrjg6g3d.apps.googleusercontent.com'
+
+// Google OAuth function
+const initializeGoogleSignIn = () => {
+  if (window.google) {
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCallback
+    })
+  }
+}
+
+const handleGoogleCallback = (response) => {
+  // This will be called when user signs in with Google
+  console.log('Google response:', response)
+}
 axios.defaults.baseURL = API_BASE_URL
 axios.defaults.withCredentials = true
 
@@ -44,7 +60,12 @@ export const AuthProvider = ({ children }) => {
         
         // Verify token is still valid
         try {
-          await axios.get('/auth/verify')
+          const response = await axios.get('/auth/verify')
+          if (response.data.success) {
+            setUser(response.data.user)
+          } else {
+            logout()
+          }
         } catch (error) {
           console.warn('Token verification failed:', error)
           logout()
@@ -52,158 +73,140 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Auth initialization error:', error)
-      logout()
     } finally {
       setLoading(false)
     }
   }
 
-  const login = async (credentials) => {
+  const login = async (email, password) => {
     try {
-      setLoading(true)
-      const response = await axios.post('/auth/login', credentials)
-      const { user: userData, token } = response.data
-
-      // Store token in cookie (httpOnly for security)
-      Cookies.set('authToken', token, { 
-        expires: 7, // 7 days
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-      })
-
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(userData))
-
-      // Set axios default header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-      setUser(userData)
-      setIsAuthenticated(true)
-
-      return { success: true, user: userData }
+      const response = await axios.post('/auth/login', { email, password })
+      
+      if (response.data.success) {
+        const { user, token } = response.data
+        
+        // Store token and user data
+        Cookies.set('authToken', token, { expires: 7 })
+        localStorage.setItem('user', JSON.stringify(user))
+        
+        // Set axios header
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        
+        // Update state
+        setUser(user)
+        setIsAuthenticated(true)
+        
+        return { success: true, user }
+      } else {
+        return { success: false, error: response.data.error }
+      }
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed'
-      return { success: false, error: message }
-    } finally {
-      setLoading(false)
+      console.error('Login error:', error)
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Login failed' 
+      }
     }
   }
 
   const register = async (userData) => {
     try {
-      setLoading(true)
       const response = await axios.post('/auth/register', userData)
-      const { user: newUser, token } = response.data
-
-      // Store token in cookie
-      Cookies.set('authToken', token, { 
-        expires: 7,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-      })
-
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(newUser))
-
-      // Set axios default header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-      setUser(newUser)
-      setIsAuthenticated(true)
-
-      return { success: true, user: newUser }
-    } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed'
-      return { success: false, error: message }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const googleLogin = async (googleData) => {
-    try {
-      setLoading(true)
-      const response = await axios.post('/auth/google', {
-        token: googleData.credential
-      })
       
-      const { user: userData, token } = response.data
-
-      // Store token in cookie
-      Cookies.set('authToken', token, { 
-        expires: 7,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-      })
-
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(userData))
-
-      // Set axios default header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-      setUser(userData)
-      setIsAuthenticated(true)
-
-      return { success: true, user: userData }
+      if (response.data.success) {
+        const { user, token } = response.data
+        
+        // Store token and user data
+        Cookies.set('authToken', token, { expires: 7 })
+        localStorage.setItem('user', JSON.stringify(user))
+        
+        // Set axios header
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        
+        // Update state
+        setUser(user)
+        setIsAuthenticated(true)
+        
+        return { success: true, user }
+      } else {
+        return { success: false, error: response.data.error }
+      }
     } catch (error) {
-      const message = error.response?.data?.message || 'Google login failed'
-      return { success: false, error: message }
+      console.error('Registration error:', error)
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Registration failed' 
+      }
+    }
+  }
+
+  const googleLogin = async (credential) => {
+    try {
+      const response = await axios.post('/auth/google', { credential })
+      
+      if (response.data.success) {
+        const { user, token } = response.data
+        
+        // Store token and user data
+        Cookies.set('authToken', token, { expires: 7 })
+        localStorage.setItem('user', JSON.stringify(user))
+        
+        // Set axios header
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        
+        // Update state
+        setUser(user)
+        setIsAuthenticated(true)
+        
+        return { success: true, user }
+      } else {
+        return { success: false, error: response.data.error }
+      }
+    } catch (error) {
+      console.error('Google login error:', error)
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Google login failed' 
+      }
+    }
+  }
+
+  const logout = async () => {
+    try {
+      await axios.post('/auth/logout')
+    } catch (error) {
+      console.warn('Logout endpoint error:', error)
     } finally {
-      setLoading(false)
+      // Clear local data
+      Cookies.remove('authToken')
+      localStorage.removeItem('user')
+      delete axios.defaults.headers.common['Authorization']
+      
+      // Update state
+      setUser(null)
+      setIsAuthenticated(false)
     }
   }
 
-  const logout = () => {
-    // Remove token and user data
-    Cookies.remove('authToken')
-    localStorage.removeItem('user')
-    
-    // Clear axios default header
-    delete axios.defaults.headers.common['Authorization']
-    
-    setUser(null)
-    setIsAuthenticated(false)
-  }
-
-  const updateUser = (updatedUser) => {
-    setUser(updatedUser)
-    localStorage.setItem('user', JSON.stringify(updatedUser))
-  }
-
-  // Save resume data to user account
-  const saveResumeData = async (resumeData) => {
+  const saveResume = async (name, resumeData) => {
     try {
-      const response = await axios.post('/resumes', {
-        data: resumeData,
-        name: resumeData.personalInfo?.fullName || 'Untitled Resume'
-      })
-      return { success: true, resume: response.data }
+      const response = await axios.post('/user/resumes', { name, data: resumeData })
+      return response.data.success ? 
+        { success: true, resume: response.data.resume } : 
+        { success: false, error: response.data.error }
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to save resume'
-      return { success: false, error: message }
+      return { success: false, error: error.response?.data?.error || 'Failed to save resume' }
     }
   }
 
-  // Load user's resumes
-  const loadUserResumes = async () => {
+  const getResumes = async () => {
     try {
-      const response = await axios.get('/resumes')
-      return { success: true, resumes: response.data }
+      const response = await axios.get('/user/resumes')
+      return response.data.success ? 
+        { success: true, resumes: response.data.resumes } : 
+        { success: false, error: response.data.error }
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to load resumes'
-      return { success: false, error: message }
-    }
-  }
-
-  // Delete a resume
-  const deleteResume = async (resumeId) => {
-    try {
-      await axios.delete(`/resumes/${resumeId}`)
-      return { success: true }
-    } catch (error) {
-      const message = error.response?.data?.message || 'Failed to delete resume'
-      return { success: false, error: message }
+      return { success: false, error: error.response?.data?.error || 'Failed to fetch resumes' }
     }
   }
 
@@ -215,10 +218,8 @@ export const AuthProvider = ({ children }) => {
     register,
     googleLogin,
     logout,
-    updateUser,
-    saveResumeData,
-    loadUserResumes,
-    deleteResume
+    saveResume,
+    getResumes
   }
 
   return (

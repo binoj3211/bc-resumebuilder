@@ -1,0 +1,23 @@
+// Simple backend test
+console.log('Testing backend...')
+
+// Test with fetch instead of PowerShell
+fetch('http://localhost:3001/health')
+  .then(response => response.json())
+  .then(data => console.log('✅ Backend working:', data))
+  .catch(error => console.error('❌ Backend failed:', error))
+
+// Test auth endpoint
+fetch('http://localhost:3001/api/auth/register', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    firstName: 'Test',
+    lastName: 'User', 
+    email: 'test@example.com',
+    password: 'password123'
+  })
+})
+.then(response => response.json())
+.then(data => console.log('✅ Auth endpoint:', data))
+.catch(error => console.error('❌ Auth failed:', error))

@@ -1,7 +1,9 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FileText, Zap, Target, Award, Download, Eye, Shield, Palette } from 'lucide-react'
 
 const Features = () => {
+  const navigate = useNavigate()
   const features = [
     {
       icon: Zap,
@@ -88,10 +90,16 @@ const Features = () => {
               Join thousands of job seekers who've successfully landed their dream jobs
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white text-blue-600 hover:bg-blue-50 font-medium px-8 py-3 rounded-lg transition-colors">
+              <button 
+                onClick={() => navigate('/templates')}
+                className="bg-white text-blue-600 hover:bg-blue-50 font-medium px-8 py-3 rounded-lg transition-colors"
+              >
                 Create Your Resume
               </button>
-              <button className="border border-blue-300 text-white hover:bg-white/10 font-medium px-8 py-3 rounded-lg transition-colors">
+              <button 
+                onClick={() => navigate('/templates')}
+                className="border border-blue-300 text-white hover:bg-white/10 font-medium px-8 py-3 rounded-lg transition-colors"
+              >
                 View Sample Resumes
               </button>
             </div>

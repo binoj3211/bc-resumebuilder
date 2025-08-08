@@ -10,76 +10,85 @@ const ModernTemplate = ({ data, resumeData }) => {
   }
 
   const formatDateRange = (startDate, endDate, current) => {
-    const start = formatDate(startDate)
-    const end = current ? 'Present' : formatDate(endDate)
+    const start = formatDate(startDate) || 'Start Date'
+    const end = current ? 'Present' : (formatDate(endDate) || 'End Date')
     return `${start} - ${end}`
   }
 
   return (
     <div style={{
-      width: '100%',
-      maxWidth: '8.5in',
-      minHeight: '11in',
-      margin: '0 auto',
+      width: '100%', // Take full width of container
+      minHeight: '100%', // Take full height of container
+      margin: 0,
       backgroundColor: 'white',
-      padding: '0.5in',
-      fontSize: '12px',
-      lineHeight: '1.4',
+      padding: '18mm', // Better margins for PDF
+      fontSize: '12px', // Slightly larger font for better PDF readability
+      lineHeight: '1.6', // More generous line height
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       color: '#000',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      position: 'relative',
+      overflowWrap: 'break-word',
+      wordWrap: 'break-word'
     }}>
       {/* Header */}
       <div style={{
         borderBottom: '2px solid #2563eb',
-        paddingBottom: '16px',
-        marginBottom: '24px',
+        paddingBottom: '18px',
+        marginBottom: '28px',
         textAlign: 'center'
       }}>
         <h1 style={{
-          fontSize: '28px',
+          fontSize: '30px',
           fontWeight: '700',
           color: '#000',
-          margin: '0 0 12px 0',
-          letterSpacing: '1px'
+          margin: '0 0 18px 0',
+          letterSpacing: '1.5px',
+          textTransform: 'uppercase'
         }}>
           {templateData.personalInfo?.fullName || 'Your Name'}
         </h1>
         
         <div style={{
-          fontSize: '11px',
+          fontSize: '12px',
           color: '#374151',
           display: 'flex',
           flexWrap: 'wrap',
           justifyContent: 'center',
-          gap: '12px'
+          gap: '18px',
+          lineHeight: '1.6'
         }}>
           {templateData.personalInfo?.email && <span>{templateData.personalInfo.email}</span>}
+          {templateData.personalInfo?.phone && <span>•</span>}
           {templateData.personalInfo?.phone && <span>{templateData.personalInfo.phone}</span>}
+          {templateData.personalInfo?.location && <span>•</span>}
           {templateData.personalInfo?.location && <span>{templateData.personalInfo.location}</span>}
+          {templateData.personalInfo?.linkedin && <span>•</span>}
           {templateData.personalInfo?.linkedin && <span>{templateData.personalInfo.linkedin.replace('https://', '')}</span>}
+          {templateData.personalInfo?.website && <span>•</span>}
           {templateData.personalInfo?.website && <span>{templateData.personalInfo.website.replace('https://', '')}</span>}
         </div>
       </div>
 
       {/* Professional Summary */}
       {templateData.summary && (
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '28px' }}>
           <h2 style={{
-            fontSize: '16px',
+            fontSize: '18px',
             fontWeight: '600',
             color: '#2563eb',
-            margin: '0 0 8px 0',
+            margin: '0 0 12px 0',
             borderBottom: '1px solid #d1d5db',
-            paddingBottom: '4px'
+            paddingBottom: '6px'
           }}>
             PROFESSIONAL SUMMARY
           </h2>
           <p style={{
             color: '#374151',
-            lineHeight: '1.5',
+            lineHeight: '1.7',
             margin: '0',
-            textAlign: 'justify'
+            textAlign: 'left',
+            fontSize: '12px'
           }}>
             {templateData.summary}
           </p>
@@ -88,46 +97,48 @@ const ModernTemplate = ({ data, resumeData }) => {
 
       {/* Experience */}
       {templateData.experience && templateData.experience.length > 0 && (
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '28px' }}>
           <h2 style={{
-            fontSize: '16px',
+            fontSize: '18px',
             fontWeight: '600',
             color: '#2563eb',
-            margin: '0 0 12px 0',
+            margin: '0 0 16px 0',
             borderBottom: '1px solid #d1d5db',
-            paddingBottom: '4px'
+            paddingBottom: '6px'
           }}>
             PROFESSIONAL EXPERIENCE
           </h2>
           
-          {templateData.experience.map((exp, index) => (
-            <div key={exp.id || index} style={{ marginBottom: '16px' }}>
+          {templateData.experience.map((exp, index) => {
+            console.log('Rendering experience:', exp); // Debug log
+            return (
+            <div key={exp.id || index} style={{ marginBottom: '18px' }}>
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'flex-start',
-                marginBottom: '4px'
+                marginBottom: '6px'
               }}>
                 <div style={{ flex: '1' }}>
                   <h3 style={{
                     fontWeight: '600',
                     color: '#000',
                     margin: '0',
-                    fontSize: '14px'
+                    fontSize: '15px'
                   }}>
                     {exp.position}
                   </h3>
                   <p style={{
                     color: '#2563eb',
                     fontWeight: '500',
-                    margin: '2px 0',
-                    fontSize: '13px'
+                    margin: '3px 0',
+                    fontSize: '14px'
                   }}>
                     {exp.company}
                   </p>
                   {exp.location && (
                     <p style={{
-                      fontSize: '11px',
+                      fontSize: '12px',
                       color: '#6b7280',
                       margin: '0',
                       fontStyle: 'italic'
@@ -138,7 +149,7 @@ const ModernTemplate = ({ data, resumeData }) => {
                 </div>
                 <div style={{ textAlign: 'right', minWidth: '120px' }}>
                   <p style={{
-                    fontSize: '11px',
+                    fontSize: '12px',
                     color: '#6b7280',
                     fontWeight: '500',
                     margin: '0'
@@ -149,35 +160,34 @@ const ModernTemplate = ({ data, resumeData }) => {
               </div>
               
               {exp.description && (
-                <div style={{ marginTop: '6px' }}>
-                  {exp.description.split('\n').map((line, idx) => (
-                    <div key={idx} style={{
-                      color: '#374151',
-                      fontSize: '11px',
-                      marginBottom: '3px',
-                      lineHeight: '1.4',
-                      paddingLeft: line.trim().startsWith('•') ? '0' : '0'
-                    }}>
-                      {line}
-                    </div>
-                  ))}
+                <div style={{ marginTop: '10px' }}>
+                  <p style={{
+                    color: '#374151',
+                    fontSize: '12px',
+                    lineHeight: '1.6',
+                    margin: '0',
+                    textAlign: 'left'
+                  }}>
+                    {exp.description}
+                  </p>
                 </div>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
       {/* Education */}
       {templateData.education && templateData.education.length > 0 && (
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '28px' }}>
           <h2 style={{
-            fontSize: '16px',
+            fontSize: '18px',
             fontWeight: '600',
             color: '#2563eb',
-            margin: '0 0 12px 0',
+            margin: '0 0 16px 0',
             borderBottom: '1px solid #d1d5db',
-            paddingBottom: '4px'
+            paddingBottom: '6px'
           }}>
             EDUCATION
           </h2>
@@ -196,7 +206,7 @@ const ModernTemplate = ({ data, resumeData }) => {
                     margin: '0',
                     fontSize: '13px'
                   }}>
-                    {edu.degree} in {edu.field}
+                    {edu.degree}{edu.field ? ` in ${edu.field}` : ''}
                   </h3>
                   <p style={{
                     color: '#2563eb',
@@ -245,47 +255,38 @@ const ModernTemplate = ({ data, resumeData }) => {
 
       {/* Skills */}
       {templateData.skills && templateData.skills.length > 0 && (
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '28px' }}>
           <h2 style={{
-            fontSize: '16px',
+            fontSize: '18px',
             fontWeight: '600',
             color: '#2563eb',
-            margin: '0 0 12px 0',
+            margin: '0 0 16px 0',
             borderBottom: '1px solid #d1d5db',
-            paddingBottom: '4px'
+            paddingBottom: '6px'
           }}>
             SKILLS
           </h2>
           
-          {(() => {
-            const groupedSkills = templateData.skills.reduce((groups, skill) => {
-              const category = skill.category || 'Other'
-              if (!groups[category]) {
-                groups[category] = []
-              }
-              groups[category].push(skill)
-              return groups
-            }, {})
-
-            return Object.entries(groupedSkills).map(([category, skills]) => (
-              <div key={category} style={{ marginBottom: '8px' }}>
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  color: '#000'
-                }}>
-                  {category}:
-                </span>
-                <span style={{
-                  fontSize: '11px',
-                  marginLeft: '8px',
-                  color: '#374151'
-                }}>
-                  {skills.map(skill => skill.name).join(', ')}
-                </span>
-              </div>
-            ))
-          })()}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px',
+            lineHeight: '1.6'
+          }}>
+            {templateData.skills.map((skill, index) => (
+              <span key={skill.id || index} style={{
+                display: 'inline-block',
+                fontSize: '12px',
+                color: '#374151',
+                backgroundColor: '#f3f4f6',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                border: '1px solid #e5e7eb'
+              }}>
+                {skill.name}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 

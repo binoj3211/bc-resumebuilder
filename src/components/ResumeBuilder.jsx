@@ -1,22 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Download, Eye, Save, RotateCcw, Users } from 'lucide-react'
 import ResumeForm from './ResumeForm'
 import ResumePreview from './ResumePreview'
 import TemplateSelector from './TemplateSelector'
-import { generatePDF } from '../utils/pdfGenerator'
+import { generatePDF, generateSimplePDF } from '../utils/pdfGenerator'
+import { printToPDF } from '../utils/printToPdf'
 import { analyzeResumeContent } from '../utils/atsAnalyzer'
 import PDFTemplate from '../templates/PDFTemplate'
-// import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/AuthContext'
 
 const ResumeBuilder = () => {
   const navigate = useNavigate()
   const { resumeId } = useParams()
-  // const { isAuthenticated, user, saveResume, loadResume } = useAuth()
-  const isAuthenticated = false
-  const user = null
-  const saveResume = () => {}
-  const loadResume = () => {}
+  const [searchParams] = useSearchParams()
+  const { isAuthenticated, user, saveResume } = useAuth()
+  
+  // Get template from URL parameter, default to 'modern'
+  const templateFromUrl = searchParams.get('template') || 'modern'
+  
+  console.log('Template from URL:', templateFromUrl); // Debug log
   
   const [resumeData, setResumeData] = useState({
     personalInfo: {
@@ -37,7 +40,7 @@ const ResumeBuilder = () => {
     hobbies: []
   })
 
-  const [selectedTemplate, setSelectedTemplate] = useState('modern')
+  const [selectedTemplate, setSelectedTemplate] = useState(templateFromUrl)
   const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [atsScore, setAtsScore] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -79,13 +82,16 @@ const ResumeBuilder = () => {
         ? `${resumeData.personalInfo.fullName}'s Resume`
         : 'Untitled Resume'
       
-      await saveResume({
-        name: resumeName,
-        data: resumeData,
+      const result = await saveResume(resumeName, {
+        ...resumeData,
         template: selectedTemplate
-      }, resumeId)
+      })
       
-      setSaveMessage('Resume saved successfully!')
+      if (result.success) {
+        setSaveMessage('Resume saved successfully!')
+      } else {
+        setSaveMessage(result.error || 'Failed to save resume')
+      }
       setTimeout(() => setSaveMessage(''), 3000)
     } catch (error) {
       console.error('Error saving resume:', error)
@@ -99,10 +105,17 @@ const ResumeBuilder = () => {
   const handleDownloadPDF = async () => {
     if (previewRef.current) {
       try {
-        await generatePDF(previewRef.current, resumeData.personalInfo.fullName || 'resume')
+        // Use simple PDF generation for better results
+        await generateSimplePDF(previewRef.current, resumeData.personalInfo.fullName || 'resume')
       } catch (error) {
         console.error('PDF generation error:', error)
-        alert('Failed to generate PDF. Please try again.')
+        // Fallback to original method if simple fails
+        try {
+          await generatePDF(previewRef.current, resumeData.personalInfo.fullName || 'resume')
+        } catch (fallbackError) {
+          console.error('Fallback PDF generation also failed:', fallbackError)
+          alert('Failed to generate PDF. Please try again.')
+        }
       }
     }
   }
@@ -323,6 +336,17 @@ const ResumeBuilder = () => {
               >
                 <Download className="h-4 w-4" />
                 <span>Download PDF</span>
+              </button>
+              
+              <button
+                onClick={printToPDF}
+                className="btn-secondary flex items-center space-x-2"
+                title="Print or save as PDF using browser's print function"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1z" />
+                </svg>
+                <span>Print PDF</span>
               </button>
 
               <button

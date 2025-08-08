@@ -22,7 +22,7 @@ const PersonalInfoForm = ({ data, onChange }) => {
             value={data.fullName || ''}
             onChange={(e) => handleChange('fullName', e.target.value)}
             placeholder="John Doe"
-            className="input-field"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -36,7 +36,7 @@ const PersonalInfoForm = ({ data, onChange }) => {
             value={data.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
             placeholder="john.doe@email.com"
-            className="input-field"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -50,7 +50,7 @@ const PersonalInfoForm = ({ data, onChange }) => {
             value={data.phone || ''}
             onChange={(e) => handleChange('phone', e.target.value)}
             placeholder="+1 (555) 123-4567"
-            className="input-field"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -64,7 +64,7 @@ const PersonalInfoForm = ({ data, onChange }) => {
             value={data.location || ''}
             onChange={(e) => handleChange('location', e.target.value)}
             placeholder="City, State"
-            className="input-field"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -78,7 +78,7 @@ const PersonalInfoForm = ({ data, onChange }) => {
             value={data.linkedin || ''}
             onChange={(e) => handleChange('linkedin', e.target.value)}
             placeholder="https://linkedin.com/in/johndoe"
-            className="input-field"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -91,7 +91,7 @@ const PersonalInfoForm = ({ data, onChange }) => {
             value={data.website || ''}
             onChange={(e) => handleChange('website', e.target.value)}
             placeholder="https://johndoe.com"
-            className="input-field"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>

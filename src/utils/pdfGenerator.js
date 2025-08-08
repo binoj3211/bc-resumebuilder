@@ -8,83 +8,84 @@ export const generatePDF = async (element, filename = 'resume') => {
   }
 
   try {
-    // Create a temporary container with proper styling for PDF
-    const pdfContainer = document.createElement('div')
-    pdfContainer.className = 'resume-pdf-container'
-    pdfContainer.style.position = 'absolute'
-    pdfContainer.style.left = '-9999px'
-    pdfContainer.style.top = '0'
-    pdfContainer.style.width = '8.5in'
-    pdfContainer.style.minHeight = '11in'
-    pdfContainer.style.background = 'white'
-    pdfContainer.style.padding = '0.5in'
-    pdfContainer.style.fontFamily = 'Inter, sans-serif'
-    pdfContainer.style.fontSize = '12px'
-    pdfContainer.style.lineHeight = '1.4'
-    pdfContainer.style.color = '#000000'
+    // Find the actual template content within the preview element
+    const templateContent = element.querySelector('.template-content') || element.querySelector('.a4-preview-container > div') || element.querySelector('.a4-preview-container') || element
+
+    // Temporarily remove any scaling for accurate capture
+    const originalTransform = templateContent.style.transform
+    const container = templateContent.closest('.a4-preview-container')
+    const originalContainerTransform = container ? container.style.transform : ''
     
-    // Clone the content and apply PDF-specific styles
-    pdfContainer.innerHTML = element.innerHTML
-    document.body.appendChild(pdfContainer)
+    // Remove scaling temporarily
+    if (container) container.style.transform = 'scale(1)'
+    templateContent.style.transform = 'scale(1)'
 
-    // Wait a bit for fonts to load
-    await new Promise(resolve => setTimeout(resolve, 500))
+    // Wait a moment for styles to apply
+    await new Promise(resolve => setTimeout(resolve, 100))
 
-    // Get the actual content height
-    const contentHeight = pdfContainer.scrollHeight
-    const contentWidth = 816 // 8.5in * 96 DPI
-    
-    // Calculate required height (minimum 11 inches, but allow for longer content)
-    const minHeight = 1056 // 11in * 96 DPI
-    const actualHeight = Math.max(minHeight, contentHeight + 48) // Add some padding
-
-    // Configure html2canvas for better quality and text rendering
-    const canvas = await html2canvas(pdfContainer, {
-      scale: 2, // Higher quality
+    // Configure html2canvas for optimal PDF capture
+    const canvas = await html2canvas(templateContent, {
+      scale: 2, // Good quality but not too heavy
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
-      width: contentWidth,
-      height: actualHeight,
       scrollX: 0,
       scrollY: 0,
-      windowWidth: contentWidth,
-      windowHeight: actualHeight,
-      imageTimeout: 10000,
+      imageTimeout: 15000,
       logging: false,
+      letterRendering: true,
       onclone: (clonedDoc) => {
-        const clonedContainer = clonedDoc.querySelector('.resume-pdf-container')
-        if (clonedContainer) {
-          // Apply additional styles to the cloned element
-          clonedContainer.style.transform = 'scale(1)'
-          clonedContainer.style.transformOrigin = 'top left'
-          clonedContainer.style.position = 'relative'
-          clonedContainer.style.left = '0'
-          clonedContainer.style.top = '0'
-        }
+        // Apply PDF-specific styles to the cloned document
+        const style = clonedDoc.createElement('style')
+        style.textContent = `
+          * {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            box-sizing: border-box !important;
+          }
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+          .a4-preview-container, 
+          .a4-preview-container > div,
+          .template-content {
+            transform: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            background: white !important;
+            width: 210mm !important;
+            min-height: 297mm !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+          }
+        `
+        clonedDoc.head.appendChild(style)
       }
     })
 
-    // Clean up temporary element
-    document.body.removeChild(pdfContainer)
+    // Restore original transforms
+    if (container) container.style.transform = originalContainerTransform
+    templateContent.style.transform = originalTransform
 
-    // Get the canvas data
+    // Get the canvas data with maximum quality
     const imgData = canvas.toDataURL('image/png', 1.0)
     
-    // Calculate PDF height in inches
-    const pdfWidth = 8.5
-    const pdfHeight = Math.max(11, actualHeight / 96) // Convert pixels to inches, minimum 11"
-    
-    // Create PDF with dynamic dimensions
+    // Create PDF with exact A4 dimensions
     const pdf = new jsPDF({
       orientation: 'portrait',
-      unit: 'in',
-      format: [pdfWidth, pdfHeight],
-      compress: true
+      unit: 'mm',
+      format: 'a4',
+      compress: true,
+      precision: 2
     })
 
-    // Add the image to PDF at exact size
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST')
+    // Calculate dimensions to fit the canvas properly
+    const imgWidth = 210 // A4 width in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width
+    
+    // Add the image to PDF, maintaining aspect ratio
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, Math.min(imgHeight, 297), undefined, 'FAST')
 
     // Save the PDF
     pdf.save(`${filename.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`)
@@ -93,6 +94,101 @@ export const generatePDF = async (element, filename = 'resume') => {
   } catch (error) {
     console.error('Error generating PDF:', error)
     throw new Error('Failed to generate PDF. Please try again.')
+  }
+}
+
+// Simple and effective PDF generation
+export const generateSimplePDF = async (element, filename = 'resume') => {
+  if (!element) {
+    throw new Error('No element provided for PDF generation')
+  }
+
+  try {
+    // Find the template content
+    const templateElement = element.querySelector('.template-content') || element
+
+    // Temporarily remove scaling for capture
+    const originalTransform = templateElement.style.transform
+    const container = templateElement.closest('.a4-preview-container')
+    const originalContainerTransform = container ? container.style.transform : ''
+    
+    if (container) container.style.transform = 'none'
+    templateElement.style.transform = 'none'
+
+    // Wait for layout to settle
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // Capture with optimal settings
+    const canvas = await html2canvas(templateElement, {
+      scale: 1.5, // Moderate scale for balance of quality and performance
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#ffffff',
+      scrollX: 0,
+      scrollY: 0,
+      logging: false,
+      imageTimeout: 15000,
+      removeContainer: true,
+      onclone: (clonedDoc) => {
+        // Ensure all elements have proper A4 sizing
+        const allElements = clonedDoc.querySelectorAll('*')
+        allElements.forEach(el => {
+          const styles = window.getComputedStyle(el)
+          if (styles.transform && styles.transform !== 'none') {
+            el.style.transform = 'none'
+          }
+        })
+      }
+    })
+
+    // Restore original transforms
+    if (container) container.style.transform = originalContainerTransform
+    templateElement.style.transform = originalTransform
+
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    })
+
+    // Get canvas dimensions and calculate scaling to fit A4
+    const canvasWidth = canvas.width
+    const canvasHeight = canvas.height
+    const pdfWidth = 210 // A4 width in mm
+    const pdfHeight = 297 // A4 height in mm
+
+    // Calculate aspect ratios
+    const canvasAspectRatio = canvasWidth / canvasHeight
+    const a4AspectRatio = pdfWidth / pdfHeight
+
+    let finalWidth, finalHeight, xOffset, yOffset
+
+    if (canvasAspectRatio > a4AspectRatio) {
+      // Canvas is wider, fit to width
+      finalWidth = pdfWidth
+      finalHeight = pdfWidth / canvasAspectRatio
+      xOffset = 0
+      yOffset = (pdfHeight - finalHeight) / 2
+    } else {
+      // Canvas is taller, fit to height
+      finalHeight = pdfHeight
+      finalWidth = pdfHeight * canvasAspectRatio
+      xOffset = (pdfWidth - finalWidth) / 2
+      yOffset = 0
+    }
+
+    // Add image to PDF
+    const imgData = canvas.toDataURL('image/png', 0.95)
+    pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight)
+
+    // Save PDF
+    pdf.save(`${filename.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`)
+    
+    return true
+  } catch (error) {
+    console.error('Error generating simple PDF:', error)
+    throw error
   }
 }
 
@@ -114,18 +210,18 @@ export const generateMultiPagePDF = async (element, filename = 'resume') => {
     const imgWidth = canvas.width
     const imgHeight = canvas.height
     
-    // A4 dimensions in pixels (approximate)
-    const a4WidthPx = 794
-    const a4HeightPx = 1123
+    // A4 dimensions in pixels (at 96 DPI)
+    const a4WidthPx = 794  // 210mm in pixels
+    const a4HeightPx = 1123  // 297mm in pixels
     
-    const pdf = new jsPDF('portrait', 'px', 'a4')
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const pdfHeight = pdf.internal.pageSize.getHeight()
+    const pdf = new jsPDF('portrait', 'mm', 'a4')
+    const pdfWidth = pdf.internal.pageSize.getWidth()  // 210mm
+    const pdfHeight = pdf.internal.pageSize.getHeight() // 297mm
     
-    // Calculate how to fit the image
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)
-    const scaledWidth = imgWidth * ratio
-    const scaledHeight = imgHeight * ratio
+    // Calculate how to fit the image properly on A4
+    const ratio = Math.min(pdfWidth / (imgWidth * 25.4 / 96), pdfHeight / (imgHeight * 25.4 / 96))
+    const scaledWidth = (imgWidth * 25.4 / 96) * ratio  // Convert pixels to mm
+    const scaledHeight = (imgHeight * 25.4 / 96) * ratio // Convert pixels to mm
     
     // Center the image
     const xOffset = (pdfWidth - scaledWidth) / 2

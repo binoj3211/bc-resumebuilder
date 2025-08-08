@@ -14,14 +14,43 @@ const ClassicTemplate = ({ data }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white p-8 min-h-[11in]" style={{ fontSize: '14px', lineHeight: '1.4' }}>
+    <div style={{
+      width: '100%', // Take full width of container
+      minHeight: '100%', // Take full height of container
+      margin: 0,
+      backgroundColor: 'white',
+      padding: '15mm', // Standard A4 margins
+      fontSize: '12px',
+      lineHeight: '1.4',
+      boxSizing: 'border-box'
+    }}>
       {/* Header */}
-      <div className="text-center border-b-2 border-black pb-4 mb-6">
-        <h1 className="text-3xl font-bold text-black mb-2 uppercase tracking-wide">
+      <div style={{
+        textAlign: 'center',
+        borderBottom: '2px solid black',
+        paddingBottom: '16px',
+        marginBottom: '24px'
+      }}>
+        <h1 style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: 'black',
+          marginBottom: '8px',
+          textTransform: 'uppercase',
+          letterSpacing: '2px',
+          margin: '0 0 8px 0'
+        }}>
           {data.personalInfo?.fullName || 'Your Name'}
         </h1>
         
-        <div className="flex justify-center flex-wrap gap-4 text-sm text-black">
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
+          fontSize: '11px',
+          color: 'black'
+        }}>
           {data.personalInfo?.email && <span>{data.personalInfo.email}</span>}
           {data.personalInfo?.phone && <span>•</span>}
           {data.personalInfo?.phone && <span>{data.personalInfo.phone}</span>}
@@ -30,7 +59,15 @@ const ClassicTemplate = ({ data }) => {
         </div>
         
         {(data.personalInfo?.linkedin || data.personalInfo?.website) && (
-          <div className="flex justify-center flex-wrap gap-4 text-sm text-black mt-1">
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            gap: '16px',
+            fontSize: '11px',
+            color: 'black',
+            marginTop: '4px'
+          }}>
             {data.personalInfo?.linkedin && <span>{data.personalInfo.linkedin}</span>}
             {data.personalInfo?.website && data.personalInfo?.linkedin && <span>•</span>}
             {data.personalInfo?.website && <span>{data.personalInfo.website}</span>}
@@ -96,7 +133,7 @@ const ClassicTemplate = ({ data }) => {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-bold text-black">
-                      {edu.degree} in {edu.field}
+                      {edu.degree}{edu.field ? ` in ${edu.field}` : ''}
                     </h3>
                     <p className="font-semibold text-black">{edu.institution}</p>
                     {edu.location && (

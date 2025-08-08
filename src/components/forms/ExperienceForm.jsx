@@ -23,9 +23,12 @@ const ExperienceForm = ({ data, onChange }) => {
   }
 
   const updateExperience = (id, field, value) => {
-    onChange(data.map(item =>
+    console.log(`Updating experience ${id}: ${field} = ${value}`)
+    const updatedData = data.map(item =>
       item.id === id ? { ...item, [field]: value } : item
-    ))
+    )
+    console.log('Updated data:', updatedData)
+    onChange(updatedData)
   }
 
   return (
@@ -120,32 +123,58 @@ const ExperienceForm = ({ data, onChange }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date
+                    End Date {experience.current ? '(Auto-filled as Present)' : ''}
                   </label>
                   <input
                     type="month"
-                    value={experience.endDate || ''}
+                    value={experience.current ? '' : (experience.endDate || '')}
                     onChange={(e) => updateExperience(experience.id, 'endDate', e.target.value)}
-                    className="input-field"
+                    className={`input-field ${experience.current ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     disabled={experience.current}
+                    placeholder={experience.current ? 'Present' : 'Select end date'}
                   />
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                   <input
                     type="checkbox"
                     id={`current-${experience.id}`}
                     checked={experience.current || false}
                     onChange={(e) => {
-                      updateExperience(experience.id, 'current', e.target.checked)
-                      if (e.target.checked) {
-                        updateExperience(experience.id, 'endDate', '')
-                      }
+                      console.log('Checkbox changed:', e.target.checked, 'for experience:', experience.id)
+                      const isCurrentlyChecked = e.target.checked
+                      
+                      // Update both fields at once to avoid timing issues
+                      const updatedData = data.map(item => {
+                        if (item.id === experience.id) {
+                          return {
+                            ...item,
+                            current: isCurrentlyChecked,
+                            endDate: isCurrentlyChecked ? '' : item.endDate
+                          }
+                        }
+                        return item
+                      })
+                      
+                      console.log('Updating experience data:', updatedData)
+                      onChange(updatedData)
                     }}
-                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    className="h-5 w-5 text-blue-600 rounded border-2 border-gray-300 focus:ring-blue-500 cursor-pointer"
                   />
-                  <label htmlFor={`current-${experience.id}`} className="ml-2 text-sm text-gray-700">
-                    I currently work here
+                  <label htmlFor={`current-${experience.id}`} className="text-sm text-gray-700 cursor-pointer flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">I currently work here</span>
+                      {experience.current && (
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                          Current Position
+                        </span>
+                      )}
+                    </div>
+                    {experience.current && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        End date will be automatically set to "Present"
+                      </div>
+                    )}
                   </label>
                 </div>
               </div>

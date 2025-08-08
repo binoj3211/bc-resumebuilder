@@ -1,18 +1,22 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { ArrowRight, Sparkles, CheckCircle, Users } from 'lucide-react'
-
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import AuthModal from './auth/AuthModal'
 
 const Hero = () => {
   const navigate = useNavigate()
+  const { isAuthenticated, user } = useAuth()
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   const handleStartBuilding = () => {
-    navigate('/build')
+    if (isAuthenticated) {
+      navigate('/templates')
+    } else {
+      setShowAuthModal(true)
+    }
   }
 
-  const handleAnalyzeResume = () => {
-    navigate('/analyze')
-  }
   return (
     <div className="relative overflow-hidden">
       {/* Background decoration */}
@@ -51,13 +55,6 @@ const Hero = () => {
               <span>Start Building</span>
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            
-            <button
-              onClick={handleAnalyzeResume}
-              className="btn-secondary text-lg px-8 py-4"
-            >
-              Analyze Existing Resume
-            </button>
           </div>
 
           {/* Stats */}
@@ -88,6 +85,18 @@ const Hero = () => {
           </div>
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => {
+          setShowAuthModal(false)
+          // After successful auth, redirect to templates
+          if (isAuthenticated) {
+            navigate('/templates')
+          }
+        }} 
+      />
     </div>
   )
 }

@@ -14,10 +14,23 @@ const CreativeTemplate = ({ data }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white min-h-[11in]" style={{ fontSize: '14px', lineHeight: '1.4' }}>
-      <div className="flex">
+    <div style={{
+      width: '100%', // Take full width of container
+      minHeight: '100%', // Take full height of container
+      margin: 0,
+      backgroundColor: 'white',
+      fontSize: '12px',
+      lineHeight: '1.4',
+      boxSizing: 'border-box'
+    }}>
+      <div style={{ display: 'flex', height: '100%' }}>
         {/* Left Sidebar */}
-        <div className="w-1/3 bg-gradient-to-b from-purple-600 to-purple-700 text-white p-6">
+        <div style={{
+          width: '33.333%',
+          background: 'linear-gradient(to bottom, #9333ea, #7c3aed)',
+          color: 'white',
+          padding: '20px'
+        }}>
           {/* Personal Info */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold mb-4">

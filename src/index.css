@@ -7,10 +7,18 @@
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    height: 100%;
   }
   
   body {
     @apply bg-gray-50 text-gray-900;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #root {
+    height: 100%;
   }
 }
 
@@ -33,6 +41,36 @@
   
   .section-title {
     @apply text-2xl font-bold text-gray-900 mb-6;
+  }
+
+  /* Resume Container Styles */
+  .resume-container {
+    height: 100%;
+  }
+
+  /* Responsive resume preview */
+  @media (max-width: 1024px) {
+    .template-content {
+      transform: scale(0.8) !important;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .template-content {
+      transform: scale(0.6) !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .template-content {
+      transform: scale(0.5) !important;
+    }
+  }
+
+  /* Ensure proper scrolling */
+  .a4-preview-container {
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .animate-pulse-soft {
