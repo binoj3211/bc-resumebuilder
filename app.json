@@ -1,0 +1,34 @@
+{
+  "name": "BC Resume Builder",
+  "description": "ATS-friendly resume builder with admin panel",
+  "keywords": ["react", "nodejs", "resume", "ats"],
+  "website": "https://github.com/binoj3211/bc-resumebuilder",
+  "success_url": "/",
+  "scripts": {
+    "build": "npm install && npm run build && cd backend && npm install",
+    "start": "cd backend && npm start"
+  },
+  "env": {
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    },
+    "JWT_SECRET": {
+      "description": "JWT secret key for authentication",
+      "generator": "secret"
+    },
+    "MONGODB_URI": {
+      "description": "MongoDB connection string",
+      "required": true
+    },
+    "PORT": {
+      "description": "Port number",
+      "value": "3001"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}

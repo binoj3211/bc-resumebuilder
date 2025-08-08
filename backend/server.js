@@ -29,7 +29,11 @@ app.use(cors({
     'http://localhost:5176', 
     'http://localhost:5177', 
     'http://localhost:3000',
-    process.env.FRONTEND_URL
+    process.env.FRONTEND_URL,
+    'https://*.railway.app',
+    'https://*.vercel.app',
+    'https://*.netlify.app',
+    'https://*.render.com'
   ], 
   methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],

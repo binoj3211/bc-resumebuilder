@@ -8,7 +8,11 @@ import Logo from './components/Logo'
 import { generatePDF } from './utils/pdfGenerator'
 
 // Configure axios for backend API with timeout
-axios.defaults.baseURL = 'http://127.0.0.1:3001/api'
+const API_BASE_URL = import.meta.env.PROD 
+  ? (import.meta.env.VITE_API_URL || 'https://your-backend-url.railway.app/api')
+  : 'http://127.0.0.1:3001/api'
+
+axios.defaults.baseURL = API_BASE_URL
 axios.defaults.timeout = 10000
 
 function App() {
