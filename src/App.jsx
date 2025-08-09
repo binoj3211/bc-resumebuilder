@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react'
-import axios from 'axios'
 import Cookies from 'js-cookie'
+import apiClient from './api' // <-- Import the new API client
 import ResumeForm from './components/ResumeForm'
 import ResumePreview from './components/ResumePreview'
 import TemplateSelector from './components/TemplateSelector'
 import Logo from './components/Logo'
 import { generatePDF } from './utils/pdfGenerator'
 
-// Configure axios for backend API with timeout (must set VITE_API_URL in env)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3001/api'
-axios.defaults.baseURL = API_BASE_URL
-axios.defaults.timeout = 10000
+// The global axios configuration is now removed from here
+// and handled by src/api.js
 
 function App() {
   const [currentView, setCurrentView] = useState('home')
@@ -110,8 +108,7 @@ function App() {
       
       if (token) {
         try {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-          const response = await axios.get('/user/profile')
+          const response = await apiClient.get('/user/profile')
           if (response.data.success) {
             const user = response.data.user
             setUser(user)
@@ -191,12 +188,11 @@ function App() {
       console.log('Admin Password:', password)
     }
     
-    const response = await axios.post('/auth/login', { email, password })
+    const response = await apiClient.post('/auth/login', { email, password })
     
     if (response.data.success) {
       const { token, user } = response.data
       Cookies.set('authToken', token, { expires: 7 })
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(user)
       setShowAuthModal(false)
       
@@ -273,7 +269,7 @@ function App() {
 
   const loadUserResumes = async () => {
     try {
-      const response = await axios.get('/user/resumes')
+      const response = await apiClient.get('/user/resumes')
       if (response.data.success) {
         const resumes = response.data.resumes || []
         console.log('📄 User Resumes:', resumes)
@@ -313,7 +309,7 @@ function App() {
 
   const loadResumeData = async (resumeId) => {
     try {
-      const response = await axios.get(`/user/resumes/${resumeId}`)
+      const response = await apiClient.get(`/user/resumes/${resumeId}`)
       if (response.data.success) {
         setResumeData(response.data.resume.data)
         console.log('✅ Resume data loaded:', response.data.resume.name)
@@ -336,7 +332,7 @@ function App() {
     const firstName = nameParts[0] || ''
     const lastName = nameParts.slice(1).join(' ') || 'User'
     
-    const response = await axios.post('/auth/register', { 
+    const response = await apiClient.post('/auth/register', { 
       firstName, 
       lastName, 
       email, 
@@ -346,7 +342,6 @@ function App() {
     if (response.data.success) {
       const { token, user } = response.data
       Cookies.set('authToken', token, { expires: 7 })
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(user)
       setShowAuthModal(false)
       
@@ -442,7 +437,7 @@ function App() {
         ? `${resumeData.personalInfo.fullName}'s Resume`
         : 'My Resume'
       
-      const response = await axios.post('/user/resumes', {
+      const response = await apiClient.post('/user/resumes', {
         name: resumeName,
         data: resumeData
       })
@@ -682,7 +677,7 @@ function App() {
         
         // Check if it's a network connectivity issue
         if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message.includes('Network Error') || err.message.includes('connect')) {
-          setError('🔌 Cannot connect to authentication server.\n\n💡 Solutions:\n• Make sure backend server is running on port 3001\n• Check Windows Firewall settings\n• Try restarting both frontend and backend servers')
+          setError('🔌 Cannot connect to the server. Please check your internet connection or try again later. If the problem persists, our server may be temporarily unavailable.')
         } else {
           setError(err.message || 'Authentication failed')
         }
