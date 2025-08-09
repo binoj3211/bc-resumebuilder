@@ -21,20 +21,29 @@ const PORT = process.env.PORT || 3001;
 app.use(helmet());
 app.use(compression());
 app.use(cookieParser());
+// A more robust CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://bc-resumebuilder.vercel.app', // Your Vercel frontend
+];
+
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173', // Main Vite dev server port
-    'http://localhost:5174', 
-    'http://localhost:5175', 
-    'http://localhost:5176', 
-    'http://localhost:5177', 
-    'http://localhost:3000',
-    process.env.FRONTEND_URL,
-    'https://*.railway.app',
-    'https://*.vercel.app',
-    'https://*.netlify.app',
-    'https://*.render.com'
-  ], 
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      return callback(new Error(msg), false);
+    }
+    
+    return callback(null, true);
+  },
   methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
   credentials: true
