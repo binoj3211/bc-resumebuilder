@@ -9,7 +9,7 @@ import { generatePDF } from './utils/pdfGenerator'
 
 // Configure axios for backend API with timeout
 const API_BASE_URL = import.meta.env.PROD 
-  ? (import.meta.env.VITE_API_URL || 'https://your-backend-url.railway.app/api')
+  ? (import.meta.env.VITE_API_URL || 'https://bc-resumebuilder.onrender.com/api')
   : 'http://127.0.0.1:3001/api'
 
 axios.defaults.baseURL = API_BASE_URL
