@@ -42,7 +42,10 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ats-resume-builder')
+mongoose.connect(
+  process.env.MONGODB_URI ||
+  'mongodb+srv://binoj321:binoj321@cluster0.z3mce7y.mongodb.net/ats-resume-builder?retryWrites=true&w=majority&appName=Cluster0'
+)
 .then(() => console.log('📦 Connected to MongoDB'))
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
