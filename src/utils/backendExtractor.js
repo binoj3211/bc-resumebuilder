@@ -1,8 +1,8 @@
 // Backend API utility for PDF text extraction
-const BACKEND_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+const BACKEND_URL = import.meta.env.VITE_API_URL?.replace(/\/api$/, '') || 'http://localhost:3001';
 
 console.log('🔧 Backend Extractor Configuration:', {
-  envApiUrl: import.meta.env.VITE_API_BASE_URL,
+  envApiUrl: import.meta.env.VITE_API_URL,
   backendUrl: BACKEND_URL,
   mode: import.meta.env.MODE
 });

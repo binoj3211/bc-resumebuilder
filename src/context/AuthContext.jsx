@@ -4,11 +4,11 @@ import axios from 'axios'
 
 const AuthContext = createContext()
 
-// API Base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
+// API Base URL (Vite environment variable)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
-// Configure Google OAuth
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '937896536559-j8m59fkh30thg89dld8r6b9mjrjg6g3d.apps.googleusercontent.com'
+// Configure Google OAuth (Vite environment variable)
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'demo-client-id'
 
 // Google OAuth function
 const initializeGoogleSignIn = () => {
