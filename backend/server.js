@@ -74,7 +74,15 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Authentication routes
+// Root API endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'Welcome to the ATS Resume Builder API'
+  });
+});
+
+
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 
@@ -158,6 +166,15 @@ app.post('/api/extract-pdf-text', upload.single('resume'), async (req, res) => {
     });
   }
 });
+
+// Serve frontend in production (static assets and SPA fallback)
+if (process.env.NODE_ENV === 'production') {
+  const rootPath = path.join(__dirname, '../dist');
+  app.use(express.static(rootPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(rootPath, 'index.html'));
+  });
+}
 
 // Parse extracted text into structured resume data
 function parseResumeText(text) {

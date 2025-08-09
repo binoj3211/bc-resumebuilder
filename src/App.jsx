@@ -7,11 +7,8 @@ import TemplateSelector from './components/TemplateSelector'
 import Logo from './components/Logo'
 import { generatePDF } from './utils/pdfGenerator'
 
-// Configure axios for backend API with timeout
-const API_BASE_URL = import.meta.env.PROD
-  ? (import.meta.env.VITE_API_URL || `${window.location.origin}/api`)
-  : 'http://127.0.0.1:3001/api'
-
+// Configure axios for backend API with timeout (must set VITE_API_URL in env)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3001/api'
 axios.defaults.baseURL = API_BASE_URL
 axios.defaults.timeout = 10000
 
