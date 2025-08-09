@@ -15,7 +15,7 @@ router.get(['/register', '/login', '/google'], (req, res) => {
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Register endpoint
-router.post('/register', async (req, res) => {
+router.post('/register', async (req, res, next) => {
   try {
     const { email, password, firstName, lastName } = req.body;
 
@@ -57,16 +57,13 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Registration failed'
-    });
+    // Pass any errors to the centralized error handler
+    next(error);
   }
 });
 
 // Login endpoint
-router.post('/login', async (req, res) => {
+router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -107,16 +104,12 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Login failed'
-    });
+    next(error);
   }
 });
 
-// Google OAuth login
-router.post('/google', async (req, res) => {
+// Google Sign-In endpoint
+router.post('/google', async (req, res, next) => {
   try {
     const { credential } = req.body;
 
@@ -174,16 +167,12 @@ router.post('/google', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Google login error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Google login failed'
-    });
+    next(error);
   }
 });
 
 // Verify token endpoint
-router.get('/verify', async (req, res) => {
+router.get('/verify', (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
