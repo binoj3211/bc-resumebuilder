@@ -11,7 +11,7 @@ console.log(`Mode: ${import.meta.env.MODE}`);
 // Create a pre-configured instance of axios
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10 second timeout
+  timeout: 30000, // 30 second timeout
   withCredentials: true, // Send cookies with requests
 });
 
