@@ -96,7 +96,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 
 // PDF text extraction endpoint
-app.post('/api/extract-pdf-text', upload.single('resume'), async (req, res) => {
+app.post('/api/extract-pdf-text', upload.single('resume'), async (req, res, next) => {
   try {
     console.log('📄 Received PDF extraction request');
     
@@ -159,20 +159,8 @@ app.post('/api/extract-pdf-text', upload.single('resume'), async (req, res) => {
     res.json(response);
 
   } catch (error) {
-    console.error('❌ PDF extraction error:', error);
-    
-    res.status(500).json({
-      success: false,
-      error: error.message || 'PDF extraction failed',
-      extractedText: '',
-      metadata: {
-        pages: 0,
-        textLength: 0,
-        fileName: req.file?.originalname || 'unknown',
-        fileSize: req.file?.size || 0,
-        extractionMethod: 'pdf-parse (Node.js) - FAILED'
-      }
-    });
+    // Forward the error to the centralized error handler
+    next(error);
   }
 });
 
@@ -1131,8 +1119,20 @@ function parseResumeText(text) {
   return structuredData;
 }
 
-// Error handling middleware
+// Centralized Error Handling Middleware
+// This should be the last middleware added
 app.use((error, req, res, next) => {
+  // Log the full error stack for debugging on the server
+  console.error('💥💥💥 An unexpected error occurred! 💥💥💥');
+  console.error(`[${new Date().toISOString()}] Error on ${req.method} ${req.originalUrl}`);
+  console.error('Request Body:', req.body);
+  console.error('Error Stack:', error.stack);
+  console.error('Error Message:', error.message);
+  console.error('Error Name:', error.name);
+  console.error('Error Code:', error.code);
+  console.error('💥💥💥 End of Error Log 💥💥💥');
+
+  // Handle specific error types
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
@@ -1140,12 +1140,18 @@ app.use((error, req, res, next) => {
         error: 'File too large. Maximum size is 10MB.'
       });
     }
+    return res.status(400).json({ success: false, error: `File upload error: ${error.message}` });
   }
-  
-  console.error('Unhandled error:', error);
+
+  if (error.name === 'ValidationError') {
+    return res.status(400).json({ success: false, error: `Validation Error: ${error.message}` });
+  }
+
+  // Send a generic 500 Internal Server Error response to the client
+  // Avoid sending detailed error information in production for security
   res.status(500).json({
     success: false,
-    error: 'Internal server error'
+    error: 'An internal server error occurred. Please try again later.'
   });
 });
 
