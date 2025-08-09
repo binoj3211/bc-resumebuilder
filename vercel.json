@@ -8,13 +8,11 @@
       }
     }
   ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
   "env": {
-    "VITE_API_URL": "https://bc-resumebuilder.onrender.com"
-  }
+    "VITE_API_URL": "https://bc-resumebuilder.onrender.com/api",
+    "VITE_GOOGLE_CLIENT_ID": "836125738860-1n65ke8msi9l3edhkt5qikf8hgb1k1ps.apps.googleusercontent.com"
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
