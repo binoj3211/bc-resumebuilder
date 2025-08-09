@@ -172,7 +172,7 @@ router.post('/google', async (req, res, next) => {
 });
 
 // Verify token endpoint
-router.get('/verify', (req, res) => {
+router.get('/verify', async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -184,8 +184,8 @@ router.get('/verify', (req, res) => {
       });
     }
 
-    const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Use the already required jwt at the top
+    const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
 
     if (!user) {
