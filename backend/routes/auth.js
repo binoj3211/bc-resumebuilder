@@ -4,6 +4,14 @@ const User = require('../models/User');
 const { generateToken } = require('../middleware/auth');
 const router = express.Router();
 
+// Return method not allowed for endpoints expecting POST
+router.get(['/register', '/login', '/google'], (req, res) => {
+  res.status(405).json({
+    success: false,
+    error: 'Method not allowed. Please use POST for this endpoint'
+  });
+});
+
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Register endpoint
