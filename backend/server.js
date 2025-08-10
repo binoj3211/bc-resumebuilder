@@ -53,7 +53,7 @@ app.use(express.json({ limit: '10mb' }));
 // Database connection
 mongoose.connect(
   process.env.MONGODB_URI ||
-  'mongodb+srv://binoj321:binoj321@cluster0.z3mce7y.mongodb.net/ats-resume-builder?retryWrites=true&w=majority&appName=Cluster0'
+  'mongodb+srv://binoj:binoj321@resume.7rutx1a.mongodb.net/?retryWrites=true&w=majority&appName=resume'
 )
 .then(() => console.log('📦 Connected to MongoDB'))
 .catch(err => console.error('❌ MongoDB connection error:', err));
