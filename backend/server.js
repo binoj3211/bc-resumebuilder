@@ -1147,11 +1147,14 @@ app.use((error, req, res, next) => {
     return res.status(400).json({ success: false, error: `Validation Error: ${error.message}` });
   }
 
-  // Send a generic 500 Internal Server Error response to the client
-  // Avoid sending detailed error information in production for security
+  // Send detailed error info for development
   res.status(500).json({
     success: false,
-    error: 'An internal server error occurred. Please try again later.'
+    error: error.message,
+    stack: error.stack,
+    code: error.code || null,
+    name: error.name || null,
+    details: error
   });
 });
 
